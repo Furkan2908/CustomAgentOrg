@@ -1,0 +1,1665 @@
+<template>
+    <div class="builder-root">
+
+        <!-- ===== TOP HEADER ===== -->
+        <div class="builder-header">
+            <div class="header-left">
+                <span class="builder-icon">
+                    <template if:true={hasAvatar}>
+                        <img class="header-avatar" src={avatarUrl} alt="avatar"/>
+                    </template>
+                    <template if:false={hasAvatar}>
+                        <img class="header-avatar" src={avatar} alt="avatar"/>
+                    </template>
+                </span>
+                <div class="builder-header-text">
+                    <div class="builder-title">Agentforce Builder</div>
+                    <div class="builder-subtitle">Design your custom AI agent</div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="builder-title">Chat Panel Preview</div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Version History Button -->
+                <button class={versionHistoryBtnClass} onclick={toggleVersionHistory}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                        <path d="M12 7v5l4 2"/>
+                    </svg>
+                    Publish History
+                    <template if:true={hasVersions}>
+                        <span class="ver-count-badge">{versionCount}</span>
+                    </template>
+                </button>
+
+                <lightning-button
+                    label="Publish"
+                    variant="brand"
+                    onclick={handlePublish}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- ===== VERSION HISTORY SLIDE-IN PANEL ===== -->
+        <template if:true={showVersionHistory}>
+            <div class="version-history-panel">
+
+                <!-- Panel header -->
+                <div class="vh-header">
+                    <div class="vh-header-left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                            <path d="M12 7v5l4 2"/>
+                        </svg>
+                        <span class="vh-title">Publish History</span>
+                        <template if:true={hasVersions}>
+                            <span class="vh-count-pill">{versionCount} versions</span>
+                        </template>
+                    </div>
+                    <button class="vh-close-btn" onclick={toggleVersionHistory}
+                            title="Close version history">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" width="14" height="14">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Version rows -->
+                <template if:true={hasVersions}>
+                    <div class="vh-list">
+                        <template for:each={versions} for:item="ver">
+                            <div key={ver.id}
+                                class="vh-row"
+                                data-id={ver.id}
+                                onclick={navigateToVersion}
+                                role="button"
+                                tabindex="0">
+
+                                <!-- Version number circle -->
+                                <div class={ver.numClass}>
+                                    {ver.versionNum}
+                                </div>
+
+                                <!-- Name + date -->
+                                <div class="vh-row-info">
+                                    <div class="vh-row-name">{ver.name}</div>
+                                    <div class="vh-row-date">
+                                        <svg width="11" height="11" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" aria-hidden="true">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                        {ver.createdDate}
+                                    </div>
+                                </div>
+
+                                <!-- Active pill + chevron -->
+                                <div class="vh-row-right">
+                                    <template if:true={ver.isActive}>
+                                        <span class="vh-pill vh-pill--active">Active</span>
+                                    </template>
+                                    <template if:false={ver.isActive}>
+                                        <span class="vh-pill vh-pill--inactive">Inactive</span>
+                                    </template>
+                                    <svg class="vh-chevron" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        width="14" height="14" aria-hidden="true">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Empty state -->
+                <template if:false={hasVersions}>
+                    <div class="vh-empty">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                            <path d="M12 7v5l4 2"/>
+                        </svg>
+                        <p>No published versions yet.</p>
+                        <p>Publish your configuration to create the first version.</p>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+        <template if:true={hasUnpublishedChanges}>
+
+            <div class="publish-warning-banner">
+
+                <div class="publish-warning-left">
+
+                    <span class="warning-icon">⚠️</span>
+
+                    <div>
+                        <div class="warning-title">
+                            Unpublished Changes
+                        </div>
+
+                        <div class="warning-subtitle">
+                            Publish to make updates visible on the website.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- <lightning-button
+                    label="Publish Now"
+                    variant="brand"
+                    onclick={handlePublish}>
+                </lightning-button> -->
+
+            </div>
+
+        </template>
+
+        <template if:true={field}>
+            <div class="builder-body">
+
+                <!-- ===== LEFT CONFIG PANEL ===== -->
+                <div class={configPanelClass} style={configPanelStyle}>
+
+                    <!-- FLAT TABS -->
+                    <div class="flat-tabs">
+                        <button class={commonTabClass} onclick={activateCommonTab}>General</button>
+                        <button class={homePanelTabClass} onclick={activateHomeTab}>Home Panel</button>
+                        <button class={sidePanelTabClass} onclick={activateSideTab}>Side Panel</button>
+                    </div>
+
+                    <!-- SCROLLABLE CONTENT -->
+                    <div class="panel-scroll">
+
+                        <!-- ================= HOME PANEL TAB ================= -->
+                        <template if:true={isHomeTab}>
+
+                            <div class="toggle-row-new">
+                                <span class="toggle-label-text">Show Home Panel</span>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" checked={showHomePanel} onchange={handleToggle} />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleBranding}>
+                                    <span class="accordion-label">Welcome Section</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showBranding}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input label="Welcome Title" maxlength="32768" data-field="Welcome_Message__c"
+                                                value={safeWelcomeMessage} onblur={handleChange} field-level-help="Main heading shown when chat opens">
+                                            </lightning-input>
+                                            <lightning-textarea label="Welcome Description" maxlength="32768" data-field="Welcome_Description__c"
+                                                value={safeWelcomeDesc} onblur={handleChange} field-level-help="Small text shown below the heading">
+                                            </lightning-textarea>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonColors}>
+                                    <span class="accordion-label">Color Palette</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonColors}>
+                                    <div class="accordion-body">
+                                        <div class="color-grid">
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Header Color 
+                                                    <lightning-helptext content="Top bar color of chat window"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Header_color__c">
+                                                    <span class="color-swatch" style={headerColorSwatch}></span>
+                                                    <span class="color-hex">#{headerColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Header_color__c" value={safeHeaderColor} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper color-field-wrapper--full">
+                                                <label class="color-field-label">Background</label>
+                                                <div class="gradient-row">
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Primary
+                                                            <lightning-helptext content="Main background color of chat"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box" onclick={openColorPicker}>
+                                                            <span class="color-swatch" style={gradientStartSwatch}></span>
+                                                            <span class="color-hex">{gradientStartHex}</span>
+                                                            <input type="color" class="hidden-color-input" data-field="Gradient_Start__c" value={safeGradientStart} onchange={handleChange}/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Secondary (Optional)
+                                                            <lightning-helptext content="Second color for gradient background (optional/ For better UI look)"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box-wrapper">
+                                                            <div class="color-picker-box" onclick={openColorPicker}>
+                                                                <span class="color-swatch" style={gradientEndSwatch}></span>
+                                                                <span class="color-hex">{gradientEndHex}</span>
+                                                                <input type="color" class="hidden-color-input" data-field="Gradient_End__c" value={safeGradientEnd} onchange={handleChange}/>
+                                                            </div>
+                                                            <template if:true={safeGradientEnd}>
+                                                                <button class="color-clear-btn" onclick={clearGradientEnd} title="Clear secondary color">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                                        stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                    </svg>
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="helper-text">Select one color for solid background or two colors for gradient.</div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">User Bubble
+                                                    <lightning-helptext content="Background color of user's message box"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="User_Bubble_Color__c">
+                                                    <span class="color-swatch" style={userBubbleColorSwatch}></span>
+                                                    <span class="color-hex">#{userBubbleColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="User_Bubble_Color__c" value={safeUserBubble} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">User Message
+                                                    <lightning-helptext content="Text color of user's messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="User_message_color__c">
+                                                    <span class="color-swatch" style={userMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{userMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="User_message_color__c" value={safeUserMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Bot Bubble
+                                                    <lightning-helptext content="Background color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Bot_Bubble_Color__c">
+                                                    <span class="color-swatch" style={botBubbleColorSwatch}></span>
+                                                    <span class="color-hex">#{botBubbleColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Bot_Bubble_Color__c" value={safeBotBubble} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Bot Message
+                                                    <lightning-helptext content="Text color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Bot_message_color__c">
+                                                    <span class="color-swatch" style={botMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{botMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Bot_message_color__c" value={safeBotMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleSizing}>
+                                    <span class="accordion-label">Sizing</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showSizing}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showSizing}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showSizing}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Width
+                                                        <lightning-helptext content="Width of chat window"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeHomePanelWidth}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="320" max="1500" step="10" data-field="Home_Panel_Width__c" value={safeHomePanelWidth} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Height
+                                                        <lightning-helptext content="Height of chat window"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeHomePanelHeight}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="400" max="700" step="10" data-field="Home_Panel_Height__c" value={safeHomePanelHeight} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Border Radius
+                                                        <lightning-helptext content="How rounded the chat corners look"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeHomePanelRadius}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="0" max="30" step="1" data-field="Home_Panel_border_radius__c" value={safeHomePanelRadius} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Avatar Border Radius
+                                                        <lightning-helptext content="Shape of avatar (0 = square, 50 = circle)"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeHomeAvatarRadius}%</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="0" max="50" step="1" data-field="Home_Panel_Avatar_Border_Radius__c" value={safeHomeAvatarRadius} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                        </template>
+
+                        <!-- ================= SIDE PANEL TAB ================= -->
+                        <template if:true={isSideTab}>
+
+                            <div class="toggle-row-new">
+                                <span class="toggle-label-text">Show Side Panel</span>
+                                <label class="custom-toggle">
+                                    <input type="checkbox" checked={showSidePanelChecked} onchange={handleSidePanelToggle} />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleBranding}>
+                                    <span class="accordion-label">Branding</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showBranding}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input label="Header Content" data-field="Header_Content__c" maxlength="50" value={safeHeaderContent} onblur={handleChange} field-level-help="Text shown at top of chat"></lightning-input>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleMessages}>
+                                    <span class="accordion-label">Messages</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showMessages}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showMessages}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showMessages}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input field-level-help="Small message shown when panel opens" maxlength="255" label="Toast Message" data-field="Side_Panel_Toast_Msg__c" value={safeSideToast} onblur={handleChange}></lightning-input>
+                                            <lightning-textarea field-level-help="First message sent automatically by bot" maxlength="32768" label="Initial Bot Message" data-field="First_Bot_Message__c" value={safeFirstBotMessage} onchange={handleChange}></lightning-textarea>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonColors}>
+                                    <span class="accordion-label">Color Palette</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonColors}>
+                                    <div class="accordion-body">
+                                        <div class="color-grid">
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Header Color
+                                                    <lightning-helptext content="Top bar color of chat window"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Header_color__c">
+                                                    <span class="color-swatch" style={headerColorSwatch}></span>
+                                                    <span class="color-hex">#{headerColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Header_color__c" value={safeHeaderColor} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper color-field-wrapper--full">
+                                                <label class="color-field-label">Background</label>
+                                                <div class="gradient-row">
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Primary
+                                                            <lightning-helptext content="Main background color of chat"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box" onclick={openColorPicker}>
+                                                            <span class="color-swatch" style={gradientStartSwatch}></span>
+                                                            <span class="color-hex">{gradientStartHex}</span>
+                                                            <input type="color" class="hidden-color-input" data-field="Gradient_Start__c" value={safeGradientStart} onchange={handleChange}/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Secondary (Optional)
+                                                            <lightning-helptext content="Second color for gradient background (optional/ For better UI look)"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box-wrapper">
+                                                            <div class="color-picker-box" onclick={openColorPicker}>
+                                                                <span class="color-swatch" style={gradientEndSwatch}></span>
+                                                                <span class="color-hex">{gradientEndHex}</span>
+                                                                <input type="color" class="hidden-color-input" data-field="Gradient_End__c" value={safeGradientEnd} onchange={handleChange}/>
+                                                            </div>
+                                                            <template if:true={safeGradientEnd}>
+                                                                <button class="color-clear-btn" onclick={clearGradientEnd} title="Clear secondary color">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                                        stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                    </svg>
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="helper-text">Select one color for solid background or two colors for gradient.</div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">User Message
+                                                    <lightning-helptext content="Text color of user's messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="User_message_color__c">
+                                                    <span class="color-swatch" style={userMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{userMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="User_message_color__c" value={safeUserMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Bot Message
+                                                    <lightning-helptext content="Text color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Bot_message_color__c">
+                                                    <span class="color-swatch" style={botMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{botMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Bot_message_color__c" value={safeBotMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleSizing}>
+                                    <span class="accordion-label">Sizing</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showSizing}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showSizing}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showSizing}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Width
+                                                        <lightning-helptext content="Width of chat window"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeSidePanelWidth}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="300" max="800" step="10" data-field="Side_Panel_Width__c" value={safeSidePanelWidth} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Height
+                                                        <lightning-helptext content="Height of chat window"></lightning-helptext>
+                                                    </label>
+                                                    <span class="slider-value-badge">{safeSidePanelHeight}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="400" max="900" step="10" data-field="Size_Panel_Height__c" value={safeSidePanelHeight} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                        </template>
+
+                        <!-- ================= COMMON TAB ================= -->
+                        <template if:true={isCommonTab}>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonBranding}>
+                                    <span class="accordion-label">Branding</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonBranding}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonBranding}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input field-level-help="Name displayed in chat header" label="Agent Name" maxlength="100" data-field="Agent_name__c" value={safeAgentName} onblur={handleChange}></lightning-input>
+                                            <div class="upload-wrapper">
+
+                                                <!-- Upload -->
+                                                <lightning-file-upload 
+                                                    label="Upload Avatar"
+                                                    field-level-help="Bot profile image shown in chat"
+                                                    record-id={recordId}
+                                                    accept=".png,.jpg,.jpeg,.svg,.gif"
+                                                    onuploadfinished={handleUploadFinished}>
+                                                </lightning-file-upload>
+
+                                                <!-- Uploaded State (same like send icon) -->
+                                                <template if:true={avatarUrl}>
+                                                    <div class="uploaded-file-name">
+                                                        <span class="file-icon">📎</span>
+
+                                                        <span class="file-name-text">
+                                                            Avatar uploaded
+                                                        </span>
+
+                                                        <!-- ❌ CLEAR BUTTON -->
+                                                        <button class="clear-file-btn" onclick={clearAvatar}>
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </template>
+
+                                            </div>
+                                            <div class="upload-wrapper">
+                                                <lightning-file-upload label="Upload Send Button Icon" field-level-help="Icon used for send message button" record-id={recordId} accept=".png,.jpg,.jpeg,.svg" onuploadfinished={handleSendIconUpload}></lightning-file-upload>
+                                                <template if:true={sendIconUrl}>
+                                                    <div class="uploaded-file-name">
+                                                        <span class="file-icon">📎</span>
+                                                        <span class="file-name-text">Send icon uploaded</span>
+                                                        <button class="clear-file-btn" onclick={clearSendIcon}>
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonIntegration}>
+                                    <span class="accordion-label">Integration</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonIntegration}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonIntegration}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonIntegration}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input label="Embedded Service API Name" data-field="Embedded_Service_API_Name__c" value={safeEmbeddedApi} onblur={handleChange}></lightning-input>
+                                            <div class="toggle-row-new">
+                                                <span class="toggle-label-text">Enable Pre-Chat</span>
+                                                <label class="custom-toggle">
+                                                    <input type="checkbox" checked={enablePrechat} onchange={handlePrechatToggle} />
+                                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                                </label>
+                                            </div>
+                                            <template if:true={enablePrechat}>
+                                                <div class="prechat-builder">
+                                                    <template for:each={prechatFields} for:item="pField" for:index="index">
+                                                        <div key={pField.id} class="prechat-row">
+                                                            <div class="prechat-row-header">
+                                                                <span class="prechat-field-index">Field {index}</span>
+                                                                <button class="prechat-remove-btn" onclick={removePrechatField} data-index={index}>✕</button>
+                                                            </div>
+                                                            <lightning-input label="Label" maxlength="100" value={pField.label} data-index={index} data-key="label" onblur={handlePrechatFieldChange}></lightning-input>
+                                                            <lightning-input label="API Name" maxlength="100" value={pField.apiName} data-index={index} data-key="apiName" onblur={handlePrechatFieldChange}></lightning-input>
+                                                            <lightning-combobox class="prechat-full-col" label="Type" value={pField.type} options={prechatTypeOptions} data-index={index} data-key="type" onchange={handlePrechatFieldChange}></lightning-combobox>
+                                                            <div class="required-row">
+                                                                <lightning-input type="checkbox" label="Required" checked={pField.required} data-index={index} data-key="required" onblur={handlePrechatFieldChange}></lightning-input>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <button class="prechat-add-btn" onclick={addPrechatField}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                        Add Field
+                                                    </button>
+                                                    <button class="prechat-save-btn" onclick={savePrechatFields}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                                        Save Fields
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonColors}>
+                                    <span class="accordion-label">Color Palette</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonColors}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonColors}>
+                                    <div class="accordion-body">
+                                        <div class="color-grid">
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Header Color
+                                                    <lightning-helptext content="Top bar color of chat window"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Header_color__c">
+                                                    <span class="color-swatch" style={headerColorSwatch}></span>
+                                                    <span class="color-hex">#{headerColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Header_color__c" value={safeHeaderColor} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper color-field-wrapper--full">
+                                                <label class="color-field-label">Background</label>
+                                                <div class="gradient-row">
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Primary
+                                                            <lightning-helptext content="Main background color of chat"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box" onclick={openColorPicker}>
+                                                            <span class="color-swatch" style={gradientStartSwatch}></span>
+                                                            <span class="color-hex">{gradientStartHex}</span>
+                                                            <input type="color" class="hidden-color-input" data-field="Gradient_Start__c" value={safeGradientStart} onchange={handleChange}/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="color-field-wrapper">
+                                                        <label class="color-field-label">Secondary (Optional)
+                                                            <lightning-helptext content="Second color for gradient background (optional/ For better UI look)"></lightning-helptext>
+                                                        </label>
+                                                        <div class="color-picker-box-wrapper">
+                                                            <div class="color-picker-box" onclick={openColorPicker}>
+                                                                <span class="color-swatch" style={gradientEndSwatch}></span>
+                                                                <span class="color-hex">{gradientEndHex}</span>
+                                                                <input type="color" class="hidden-color-input" data-field="Gradient_End__c" value={safeGradientEnd} onchange={handleChange}/>
+                                                            </div>
+                                                            <template if:true={safeGradientEnd}>
+                                                                <button class="color-clear-btn" onclick={clearGradientEnd} title="Clear secondary color">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                                        stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                    </svg>
+                                                                </button>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="helper-text">Select one color for solid background or two colors for gradient.</div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">User Bubble
+                                                    <lightning-helptext content="Background color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="User_Bubble_Color__c">
+                                                    <span class="color-swatch" style={userBubbleColorSwatch}></span>
+                                                    <span class="color-hex">#{userBubbleColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="User_Bubble_Color__c" value={safeUserBubble} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">User Message
+                                                    <lightning-helptext content="Text color of user's messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="User_message_color__c">
+                                                    <span class="color-swatch" style={userMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{userMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="User_message_color__c" value={safeUserMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Bot Bubble
+                                                    <lightning-helptext content="Background color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Bot_Bubble_Color__c">
+                                                    <span class="color-swatch" style={botBubbleColorSwatch}></span>
+                                                    <span class="color-hex">#{botBubbleColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Bot_Bubble_Color__c" value={safeBotBubble} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                            <div class="color-field-wrapper">
+                                                <label class="color-field-label">Bot Message
+                                                    <lightning-helptext content="Text color of bot messages"></lightning-helptext>
+                                                </label>
+                                                <div class="color-picker-box" onclick={openColorPicker} data-field="Bot_message_color__c">
+                                                    <span class="color-swatch" style={botMsgColorSwatch}></span>
+                                                    <span class="color-hex">#{botMsgColorHex}</span>
+                                                    <input type="color" class="hidden-color-input" maxlength="50" data-field="Bot_message_color__c" value={safeBotMsg} onchange={handleChange} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonTypography}>
+                                    <span class="accordion-label">Typography</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonTypography}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonTypography}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonTypography}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-combobox label="Font Family" options={fontFamilyOptions} data-field="Font_family__c" value={safeFontFamily} onchange={handleChange}></lightning-combobox>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Header Text Font Size</label>
+                                                    <span class="slider-value-badge">{safeHeaderFontSize}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="12" max="32" step="1" data-field="Header_font_size__c" value={safeHeaderFontSize} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                            <div class="slider-field">
+                                                <div class="slider-field-header">
+                                                    <label class="slider-label">Message Font Size</label>
+                                                    <span class="slider-value-badge">{safeMsgFontSize}px</span>
+                                                </div>
+                                                <input type="range" class="custom-slider" min="12" max="32" step="1" data-field="Message_font_size__c" value={safeMsgFontSize} onchange={handleChange} oninput={handleSliderInput} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="accordion-item">
+                                <div class="accordion-header" onclick={toggleCommonMessages}>
+                                    <span class="accordion-label">Messages</span>
+                                    <span class="accordion-chevron">
+                                        <template if:true={showCommonMessages}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                        </template>
+                                        <template if:false={showCommonMessages}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </template>
+                                    </span>
+                                </div>
+                                <template if:true={showCommonMessages}>
+                                    <div class="accordion-body">
+                                        <div class="field-stack">
+                                            <lightning-input label="Input Box Placeholder" maxlength="100" data-field="Input_Placeholder__c" value={safeInputPlaceholder} onblur={handleChange}></lightning-input>
+                                            <lightning-input label="Typing Indicator Text" maxlength="100" data-field="Typing_Indicator_Text__c" value={safeTypingIndicator} onblur={handleChange}></lightning-input>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                        </template>
+
+                    </div>
+                </div>
+
+                <!-- ===== RESIZE HANDLE ===== -->
+                <div class={resizeHandleClass}
+                     onmousedown={startResize}
+                     ondblclick={toggleCollapse}>
+                    <div class="resize-handle-bar"></div>
+                    <button class="resize-collapse-btn"
+                            onclick={toggleCollapse}
+                            title={collapseTooltip}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <template if:true={isPanelCollapsed}>
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </template>
+                            <template if:false={isPanelCollapsed}>
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </template>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- ===== RIGHT PREVIEW AREA ===== -->
+                <div class="preview-area">
+
+                    <!-- ── HOME PANEL TAB ── -->
+                    <template if:true={isHomeTab}>
+                        <div class="hp-panel" style={homePanelStyle}>
+
+                            <!-- Background blobs — match actual homePanel -->
+                            <div class="hp-bg-blur hp-blur-1"></div>
+                            <div class="hp-bg-blur hp-blur-2"></div>
+
+                            <div class="hp-panel-content">
+
+                                <!-- ══ VIEW A — PRE-CHAT FORM ══ -->
+                                <template if:true={isHomePrechatStep}>
+
+                                    <!-- Pre-chat header -->
+                                    <div class="hp-chat-header hp-glass-header" style={homeChatHeaderStyle}>
+                                        <div class="hp-header-branding">
+                                            <template if:true={hasAvatar}>
+                                                <img src={avatarUrl} class="hp-header-icon" style={homeAvatarStyle} alt="Agent"/>
+                                            </template>
+                                            <template if:false={hasAvatar}>
+                                                <!-- <span class="hp-header-emoji">🤖</span> -->
+                                                <img class="hp-header-icon" src={avatar} alt="avatar"/>
+                                            </template>
+                                            <h2 class="hp-header-text">{safeHeaderContent}</h2>
+                                        </div>
+                                        <button class="hp-close-btn" onclick={goHomeToChat}>
+                                            <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="15 18 9 12 15 6"></polyline>
+                                            </svg> -->
+                                            Skip
+                                        </button>
+                                    </div>
+
+                                    <!-- Pre-chat form body -->
+                                    <div class="hp-prechat-body hp-custom-scroll">
+                                        <div class="hp-prechat-intro">
+                                            <p class="hp-prechat-title" style={homePrechatTitleStyle}>Before we start</p>
+                                            <p class="hp-prechat-subtitle" style={homePrechatSubtitleStyle}>
+                                                Please fill in your details so we can help you better.
+                                            </p>
+                                        </div>
+                                        <template for:each={prechatFields} for:item="pf">
+                                            <div key={pf.apiName} class="hp-prechat-field">
+                                                <label class="hp-prechat-label" style={homePrechatLabelStyle}>
+                                                    {pf.label}
+                                                    <template if:true={pf.required}>
+                                                        <span class="hp-required-star">*</span>
+                                                    </template>
+                                                </label>
+                                                <input
+                                                    type={pf.type}
+                                                    class="hp-prechat-input"
+                                                    placeholder={pf.label}
+                                                />
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Pre-chat footer: single Start Chat button (home panel style) -->
+                                    <div class="hp-input-section hp-prechat-footer-section">
+                                        <button class="hp-prechat-start-btn" style={homeSendBtnStyle} onclick={goHomeToChat}>
+                                            Start Chat
+                                            <svg class="hp-btn-arrow" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                <polyline points="12 5 19 12 12 19"></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                </template>
+
+                                <!-- ══ VIEW B — WELCOME / HOME SCREEN ══ -->
+                                <template if:true={isHomeChatActive}>
+
+                                    <!-- Welcome screen (no messages yet) -->
+                                    <template if:false={isHomeChatStarted}>
+
+                                        <!-- Back button on welcome screen (if prechat enabled) -->
+                                        <template if:true={isHomePrechatBackVisible}>
+                                            <div class="home-chat-back-row">
+                                                <button class="home-chat-back-btn" onclick={goBackToHomePrechat}>← Back</button>
+                                            </div>
+                                        </template>
+
+                                        <!-- Hero avatar section -->
+                                        <div class="hp-hero-section">
+                                            <div class="hp-avatar-hero-wrapper">
+                                                <div class="hp-home-glow" style={homeGlowStyle}></div>
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-home-avatar-img hp-float-anim"
+                                                        style={homeAvatarStyle} alt="Agent"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-avatar-placeholder hp-float-anim">🤖</span> -->
+                                                    <img class="hp-home-avatar-img hp-float-anim" src={avatar} alt="avatar"/>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <!-- Welcome text -->
+                                        <div class="hp-content-section">
+                                            <div class="hp-agent-name" style={homeAgentNameStyle}>{safeAgentName}</div>
+                                            <div class="hp-title" style={homeTitleStyle}>{safeWelcomeMessage}</div>
+                                            <div class="hp-desc" style={homeDescStyle}>{safeWelcomeDesc}</div>
+                                        </div>
+
+                                        
+
+                                        <!-- Input bar -->
+                                        <div class="hp-input-section">
+                                            <div class="hp-input-bar" style={homeInputBarStyle}>
+                                                <input
+                                                    type="text"
+                                                    class="hp-input-field"
+                                                    style={homeInputFieldStyle}
+                                                    placeholder={safeInputPlaceholder}
+                                                    value={homeCurrentInput}
+                                                    oninput={handleHomeInputChange}
+                                                    onkeydown={handleHomePanelKeyPress}
+                                                />
+                                                <div class="hp-input-actions">
+                                                    <button class="hp-send-btn" style={homeSendBtnStyle} onclick={sendHomeMessage}>
+                                                        <template if:true={hasSendIcon}>
+                                                            <img src={sendIconUrl} class="hp-send-icon-img" alt="send"/>
+                                                        </template>
+                                                        <template if:false={hasSendIcon}>
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                                            </svg>
+                                                        </template>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </template>
+
+                                    <!-- ══ VIEW C — ACTIVE CHAT ══ -->
+                                    <template if:true={isHomeChatStarted}>
+
+                                        <!-- Chat header -->
+                                        <div class="hp-chat-header hp-glass-header" style={homeChatHeaderStyle}>
+                                            <div class="hp-header-branding">
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-header-icon" style={homeAvatarStyle} alt="Agent"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-header-emoji">🤖</span> -->
+                                                    <img class="hp-header-icon" src={avatar} alt="avatar"/>
+                                                </template>
+                                                <h2 class="hp-header-text">{safeAgentName}</h2>
+                                            </div>
+                                            <button class="hp-close-btn" onclick={resetHomeChat}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Messages -->
+                                        <div class="hp-messages-wrapper hp-custom-scroll">
+                                            <template for:each={formattedHomeMessages} for:item="msg">
+
+                                                <template if:true={msg.isUser}>
+                                                    <div key={msg.id} class="hp-msg-row hp-user-row hp-slide-left">
+                                                        <div class="hp-bubble hp-user-bubble" style={msg.userStyle}>
+                                                            {msg.text}
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                                <template if:false={msg.isUser}>
+                                                    <div key={msg.id} class="hp-msg-row hp-bot-row hp-slide-right">
+                                                        <template if:true={hasAvatar}>
+                                                            <img src={avatarUrl} class="hp-chat-avatar-mini"
+                                                                style={homeAvatarStyle} alt="Bot"/>
+                                                        </template>
+                                                        <template if:false={hasAvatar}>
+                                                            <!-- <span class="hp-chat-avatar-mini hp-avatar-fallback">🤖</span> -->
+                                                            <img class="hp-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                        </template>
+                                                        <div class="hp-bubble hp-bot-bubble" style={msg.botStyle}>
+                                                            {msg.text}
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                            </template>
+
+                                            <!-- Bot typing indicator -->
+                                            <div class="hp-msg-row hp-bot-row hp-typing-row hp-slide-right">
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-chat-avatar-mini" style={homeAvatarStyle} alt="Bot"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-chat-avatar-mini hp-avatar-fallback">🤖</span> -->
+                                                    <img class="hp-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                </template>
+                                                <div class="hp-bubble hp-bot-bubble hp-typing-bubble" style={homeBotBubbleStyle}>
+                                                    <span class="hp-typing-label">{safeTypingIndicator}</span>
+                                                    <span class="hp-typing-dots">
+                                                        <span class="hp-dot"></span>
+                                                        <span class="hp-dot"></span>
+                                                        <span class="hp-dot"></span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Input bar -->
+                                        <div class="hp-input-section">
+                                            <div class="hp-input-bar" style={homeInputBarStyle}>
+                                                <input
+                                                    type="text"
+                                                    class="hp-input-field"
+                                                    style={homeInputFieldStyle}
+                                                    placeholder={safeInputPlaceholder}
+                                                    value={homeCurrentInput}
+                                                    oninput={handleHomeInputChange}
+                                                    onkeydown={handleHomePanelKeyPress}
+                                                />
+                                                <div class="hp-input-actions">
+                                                    <button class="hp-send-btn" style={homeSendBtnStyle} onclick={sendHomeMessage}>
+                                                        <template if:true={hasSendIcon}>
+                                                            <img src={sendIconUrl} class="hp-send-icon-img" alt="send"/>
+                                                        </template>
+                                                        <template if:false={hasSendIcon}>
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                                            </svg>
+                                                        </template>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </template>
+
+                                </template>
+                                <!-- end isHomeChatActive -->
+
+                            </div>
+                            <!-- end hp-panel-content -->
+                        </div>
+                        <!-- end hp-panel -->
+                    </template>
+
+                    <!-- ── COMMON / GENERAL TAB — same shell, no chat interaction ── -->
+                    <template if:true={isCommonTab}>
+                       <div class="hp-panel" style={homePanelStyle}>
+
+                            <!-- Background blobs — match actual homePanel -->
+                            <div class="hp-bg-blur hp-blur-1"></div>
+                            <div class="hp-bg-blur hp-blur-2"></div>
+
+                            <div class="hp-panel-content">
+
+                                <!-- ══ VIEW A — PRE-CHAT FORM ══ -->
+                                <template if:true={isHomePrechatStep}>
+
+                                    <!-- Pre-chat header -->
+                                    <div class="hp-chat-header hp-glass-header" style={homeChatHeaderStyle}>
+                                        <div class="hp-header-branding">
+                                            <template if:true={hasAvatar}>
+                                                <img src={avatarUrl} class="hp-header-icon" style={homeAvatarStyle} alt="Agent"/>
+                                            </template>
+                                            <template if:false={hasAvatar}>
+                                                <!-- <span class="hp-header-emoji">🤖</span> -->
+                                                <img class="hp-header-icon" src={avatar} alt="avatar"/>
+                                            </template>
+                                            <h2 class="hp-header-text">{safeHeaderContent}</h2>
+                                        </div>
+                                        <button class="hp-close-btn" onclick={goBackToHomePrechat}>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="15 18 9 12 15 6"></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Pre-chat form body -->
+                                    <div class="hp-prechat-body hp-custom-scroll">
+                                        <div class="hp-prechat-intro">
+                                            <p class="hp-prechat-title" style={homePrechatTitleStyle}>Before we start</p>
+                                            <p class="hp-prechat-subtitle" style={homePrechatSubtitleStyle}>
+                                                Please fill in your details so we can help you better.
+                                            </p>
+                                        </div>
+                                        <template for:each={prechatFields} for:item="pf">
+                                            <div key={pf.apiName} class="hp-prechat-field">
+                                                <label class="hp-prechat-label" style={homePrechatLabelStyle}>
+                                                    {pf.label}
+                                                    <template if:true={pf.required}>
+                                                        <span class="hp-required-star">*</span>
+                                                    </template>
+                                                </label>
+                                                <input
+                                                    type={pf.type}
+                                                    class="hp-prechat-input"
+                                                    placeholder={pf.label}
+                                                />
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Pre-chat footer: single Start Chat button (home panel style) -->
+                                    <div class="hp-input-section hp-prechat-footer-section">
+                                        <button class="hp-prechat-start-btn" style={homeSendBtnStyle} onclick={goHomeToChat}>
+                                            Start Chat
+                                            <svg class="hp-btn-arrow" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                <polyline points="12 5 19 12 12 19"></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                </template>
+
+                                <!-- ══ VIEW B — WELCOME / HOME SCREEN ══ -->
+                                <template if:true={isHomeChatActive}>
+
+                                    <!-- Welcome screen (no messages yet) -->
+                                    <template if:false={isHomeChatStarted}>
+
+                                        <!-- Back button on welcome screen (if prechat enabled) -->
+                                        <template if:true={isHomePrechatBackVisible}>
+                                            <div class="home-chat-back-row">
+                                                <button class="home-chat-back-btn" onclick={goBackToHomePrechat}>← Back</button>
+                                            </div>
+                                        </template>
+
+                                        <!-- Hero avatar section -->
+                                        <div class="hp-hero-section">
+                                            <div class="hp-avatar-hero-wrapper">
+                                                <div class="hp-home-glow" style={homeGlowStyle}></div>
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-home-avatar-img hp-float-anim"
+                                                        style={homeAvatarStyle} alt="Agent"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-avatar-placeholder hp-float-anim">🤖</span> -->
+                                                    <img class="hp-home-avatar-img hp-float-anim" src={avatar} alt="avatar"/>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <!-- Welcome text -->
+                                        <div class="hp-content-section">
+                                            <div class="hp-agent-name" style={homeAgentNameStyle}>{safeAgentName}</div>
+                                            <div class="hp-title" style={homeTitleStyle}>{safeWelcomeMessage}</div>
+                                            <div class="hp-desc" style={homeDescStyle}>{safeWelcomeDesc}</div>
+                                        </div>
+
+                                        
+
+                                        <!-- Input bar -->
+                                        <div class="hp-input-section">
+                                            <div class="hp-input-bar" style={homeInputBarStyle}>
+                                                <input
+                                                    type="text"
+                                                    class="hp-input-field"
+                                                    style={homeInputFieldStyle}
+                                                    placeholder={safeInputPlaceholder}
+                                                    value={homeCurrentInput}
+                                                    oninput={handleHomeInputChange}
+                                                    onkeydown={handleHomePanelKeyPress}
+                                                />
+                                                <div class="hp-input-actions">
+                                                    <button class="hp-send-btn" style={homeSendBtnStyle} onclick={sendHomeMessage}>
+                                                        <template if:true={hasSendIcon}>
+                                                            <img src={sendIconUrl} class="hp-send-icon-img" alt="send"/>
+                                                        </template>
+                                                        <template if:false={hasSendIcon}>
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                                            </svg>
+                                                        </template>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </template>
+
+                                    <!-- ══ VIEW C — ACTIVE CHAT ══ -->
+                                    <template if:true={isHomeChatStarted}>
+
+                                        <!-- Chat header -->
+                                        <div class="hp-chat-header hp-glass-header" style={homeChatHeaderStyle}>
+                                            <div class="hp-header-branding">
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-header-icon" style={homeAvatarStyle} alt="Agent"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-header-emoji">🤖</span> -->
+                                                    <img class="hp-header-icon" src={avatar} alt="avatar"/>
+                                                </template>
+                                                <h2 class="hp-header-text">{safeAgentName}</h2>
+                                            </div>
+                                            <button class="hp-close-btn" onclick={resetHomeChat}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Messages -->
+                                        <div class="hp-messages-wrapper hp-custom-scroll">
+                                            <template for:each={formattedHomeMessages} for:item="msg">
+
+                                                <template if:true={msg.isUser}>
+                                                    <div key={msg.id} class="hp-msg-row hp-user-row hp-slide-left">
+                                                        <div class="hp-bubble hp-user-bubble" style={msg.userStyle}>
+                                                            {msg.text}
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                                <template if:false={msg.isUser}>
+                                                    <div key={msg.id} class="hp-msg-row hp-bot-row hp-slide-right">
+                                                        <template if:true={hasAvatar}>
+                                                            <img src={avatarUrl} class="hp-chat-avatar-mini"
+                                                                style={homeAvatarStyle} alt="Bot"/>
+                                                        </template>
+                                                        <template if:false={hasAvatar}>
+                                                            <!-- <span class="hp-chat-avatar-mini hp-avatar-fallback">🤖</span> -->
+                                                            <img class="hp-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                        </template>
+                                                        <div class="hp-bubble hp-bot-bubble" style={msg.botStyle}>
+                                                            {msg.text}
+                                                        </div>
+                                                    </div>
+                                                </template>
+
+                                            </template>
+
+                                            <!-- Bot typing indicator -->
+                                            <div class="hp-msg-row hp-bot-row hp-typing-row hp-slide-right">
+                                                <template if:true={hasAvatar}>
+                                                    <img src={avatarUrl} class="hp-chat-avatar-mini" style={homeAvatarStyle} alt="Bot"/>
+                                                </template>
+                                                <template if:false={hasAvatar}>
+                                                    <!-- <span class="hp-chat-avatar-mini hp-avatar-fallback">🤖</span> -->
+                                                    <img class="hp-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                </template>
+                                                <div class="hp-bubble hp-bot-bubble hp-typing-bubble" style={homeBotBubbleStyle}>
+                                                    <span class="hp-typing-label">{safeTypingIndicator}</span>
+                                                    <span class="hp-typing-dots">
+                                                        <span class="hp-dot"></span>
+                                                        <span class="hp-dot"></span>
+                                                        <span class="hp-dot"></span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Input bar -->
+                                        <div class="hp-input-section">
+                                            <div class="hp-input-bar" style={homeInputBarStyle}>
+                                                <input
+                                                    type="text"
+                                                    class="hp-input-field"
+                                                    style={homeInputFieldStyle}
+                                                    placeholder={safeInputPlaceholder}
+                                                    value={homeCurrentInput}
+                                                    oninput={handleHomeInputChange}
+                                                    onkeydown={handleHomePanelKeyPress}
+                                                />
+                                                <div class="hp-input-actions">
+                                                    <button class="hp-send-btn" style={homeSendBtnStyle} onclick={sendHomeMessage}>
+                                                        <template if:true={hasSendIcon}>
+                                                            <img src={sendIconUrl} class="hp-send-icon-img" alt="send"/>
+                                                        </template>
+                                                        <template if:false={hasSendIcon}>
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                                            </svg>
+                                                        </template>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </template>
+
+                                </template>
+                                <!-- end isHomeChatActive -->
+
+                            </div>
+                            <!-- end hp-panel-content -->
+                        </div>
+                    </template>
+
+                    <!-- ═══════════════════════════════════════════════════════════
+                        SIDE PANEL PREVIEW  — replace the entire <template if:true={isSideTab}> block
+                        inside the RIGHT PREVIEW AREA of agentConfigurationConsole.html
+                        ═══════════════════════════════════════════════════════════ -->
+
+                    <template if:true={isSideTab}>
+
+                        <!-- ── LAUNCHER VIEW ── -->
+                        <template if:true={showLauncher}>
+                            <div class="prev-launcher-wrapper">
+                                <div class="prev-launcher-hint">Click the launcher below to preview the chat</div>
+
+                                <!-- Welcome toast popup -->
+                                <div class="prev-welcome-popup prev-slide-in">
+                                    <div class="prev-popup-text">{safeSideToast}</div>
+                                </div>
+
+                                <!-- FAB launcher button -->
+                                <div class="prev-launcher-btn" onclick={openSidePanel} style={phoneSendBtnStyle}>
+                                    <div class="prev-pulse-ring"></div>
+                                    <template if:true={hasAvatar}>
+                                        <img src={avatarUrl} class="prev-launcher-avatar" alt="Chat"/>
+                                    </template>
+                                    <template if:false={hasAvatar}>
+                                        <!-- <span class="prev-launcher-emoji">🤖</span> -->
+                                        <img class="prev-launcher-avatar" src={avatar} alt="avatar"/>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ── PANEL VIEW ── -->
+                        <template if:true={showSidePreview}>
+                            <div class="prev-phone-outer" style={phoneOuterStyle}>
+
+                                <!-- Decorative bg glows -->
+                                <div class="prev-bg-glow prev-top-glow"></div>
+                                <div class="prev-bg-glow prev-bottom-glow"></div>
+
+                                <!-- ══ HEADER ══ -->
+                                <div class="prev-panel-header prev-glass-header" style={sideChatHeaderStyle}>
+                                    <div class="prev-header-left">
+                                        <div class="prev-avatar-container">
+                                            <template if:true={hasAvatar}>
+                                                <img src={avatarUrl} class="prev-header-avatar" alt="AI"/>
+                                            </template>
+                                            <template if:false={hasAvatar}>
+                                                <!-- <span class="prev-header-emoji">🤖</span> -->
+                                                <img class="prev-header-avatar" src={avatar} alt="avatar"/>
+                                            </template>
+                                            <span class="prev-status-dot"></span>
+                                        </div>
+                                        <div class="prev-title-group">
+                                            <span class="prev-header-title">{safeHeaderContent}</span>
+                                        </div>
+                                    </div>
+                                    <div class="prev-actions">
+                                        <!-- Minimize -->
+                                        <button class="prev-icon-btn" onclick={goBackToLauncher} title="Minimize">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                        </button>
+                                        <!-- Close / End chat -->
+                                        <template if:true={isChatStarted}>
+                                            <button class="hp-close-btn" onclick={askEndChat}>
+                                               <!-- The X button SVG inside hp-close-btn needs explicit stroke -->
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <template if:true={showConfirmModal}>
+                                    <div class="modal-backdrop"></div>
+
+                                    <div class="confirm-modal pop-in">
+                                        <div class="modal-icon">⚠️</div>
+                                        <h3>End Session?</h3>
+                                        <p>Are you sure you want to end this chat?</p>
+
+                                        <div class="modal-actions">
+                                            <button class="btn-ghost" onclick={hideModal}>Cancel</button>
+                                            <button class="btn-danger" onclick={confirmEndChat}>
+                                                End Chat
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- ══ VIEW A — PRE-CHAT FORM ══ -->
+                                <template if:true={isPrechatStep}>
+                                    <div class="prev-prechat-body prev-custom-scroll">
+                                        <div class="prev-prechat-intro">
+                                            <p class="prev-prechat-title" style={phoneAgentNameStyle}>Before we start</p>
+                                            <p class="prev-prechat-subtitle" style={phoneWelcomeTextStyle}>
+                                                Please fill in your details so we can help you better.
+                                            </p>
+                                        </div>
+                                        <template for:each={prechatFields} for:item="pf">
+                                            <div key={pf.apiName} class="prev-prechat-field">
+                                                <label class="prev-prechat-label" style={preChatLabelStyle}>
+                                                    {pf.label}
+                                                    <template if:true={pf.required}>
+                                                        <span class="prev-required-star">*</span>
+                                                    </template>
+                                                </label>
+                                                <input
+                                                    type={pf.type}
+                                                    class="prev-prechat-input"
+                                                    placeholder={pf.label}
+                                                />
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <!-- Footer: Skip + Start -->
+                                    <div class="prev-phone-input-section prev-prechat-footer" style={phoneInputSectionStyle}>
+                                        <div class="prev-prechat-footer-actions">
+                                            <button class="prev-prechat-skip-btn" onclick={goBackToLauncher}>
+                                                Skip
+                                            </button>
+                                            <button class="prev-prechat-start-btn" style={phoneSendBtnStyle} onclick={goToWelcomeScreen}>
+                                                Start Chat
+                                                <svg class="prev-btn-arrow" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- ══ VIEW B — CHAT BODY (welcome + messages) ══ -->
+                                <template if:false={isPrechatStep}>
+
+                                    <div class="prev-chat-body prev-custom-scroll" style={heroPanelStyle}>
+
+                                        <!-- Pre-chat hero (no messages yet) -->
+                                        <template if:false={isChatStarted}>
+                                            <div class="prev-pre-chat-wrapper prev-fade-in-up">
+                                                <div class="prev-phone-avatar-wrap">
+                                                    <div class="prev-phone-avatar-ring" style={phoneAvatarRingStyle}>
+                                                        <div class="prev-avatar-glow" style={avatarGlowStyle}></div>
+                                                        <template if:true={hasAvatar}>
+                                                            <img src={avatarUrl} class="prev-phone-avatar-img" alt="AI"/>
+                                                        </template>
+                                                        <template if:false={hasAvatar}>
+                                                            <!-- <span class="prev-avatar-emoji">🤖</span> -->
+                                                            <img class="prev-phone-avatar-img" src={avatar} alt="avatar"/>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <div class="prev-phone-agent-name" style={phoneAgentNameStyle}>
+                                                    {safeWelcomeMessage}
+                                                </div>
+                                                <p class="prev-phone-welcome-text" style={phoneWelcomeTextStyle}>
+                                                    {safeWelcomeDesc}
+                                                </p>
+                                                <!-- Hint toast -->
+                                                <div class="prev-chat-hint-toast">
+                                                    <span class="prev-hint-icon">💬</span>
+                                                    <span class="prev-hint-text">Send a message to preview the chat</span>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Messages -->
+                                        <template if:true={isChatStarted}>
+                                            <div class="prev-messages-wrapper">
+                                                <template for:each={formattedMessages} for:item="msg">
+                                                    <template if:true={msg.isUser}>
+                                                        <div key={msg.id} class="prev-msg-row prev-user-row prev-slide-left">
+                                                            <div class="prev-bubble prev-user-bubble" style={msg.style}>
+                                                                {msg.text}
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={msg.isUser}>
+                                                        <div key={msg.id} class="prev-msg-row prev-bot-row prev-slide-right">
+                                                            <template if:true={hasAvatar}>
+                                                                <img src={avatarUrl} class="prev-chat-avatar-mini" alt="Bot"/>
+                                                            </template>
+                                                            <template if:false={hasAvatar}>
+                                                                <!-- <span class="prev-chat-avatar-mini prev-avatar-fallback">🤖</span> -->
+                                                                <img class="prev-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                            </template>
+                                                            <div class="prev-bubble prev-bot-bubble" style={msg.style}>
+                                                                {msg.text}
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </template>
+
+                                                <!-- Bot typing indicator -->
+                                                <div class="prev-msg-row prev-bot-row prev-typing-row prev-slide-right">
+                                                    <template if:true={hasAvatar}>
+                                                        <img src={avatarUrl} class="prev-chat-avatar-mini" alt="Bot"/>
+                                                    </template>
+                                                    <template if:false={hasAvatar}>
+                                                        <!-- <span class="prev-chat-avatar-mini prev-avatar-fallback">🤖</span> -->
+                                                        <img class="prev-chat-avatar-mini" src={avatar} alt="avatar"/>
+                                                    </template>
+                                                    <div class="prev-bubble prev-bot-bubble prev-typing-bubble" style={botBubbleStyle}>
+                                                        <span class="prev-typing-label">{safeTypingIndicator}</span>
+                                                        <span class="prev-typing-dots">
+                                                            <span class="prev-dot"></span>
+                                                            <span class="prev-dot"></span>
+                                                            <span class="prev-dot"></span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+
+                                    <!-- ── Input bar ── -->
+                                    <div class="prev-phone-input-section" style={phoneInputSectionStyle}>
+                                        <div class="prev-phone-input-bar" style={phoneInputBarStyle}>
+                                            <input
+                                                class="prev-phone-input-field"
+                                                style={phoneInputFieldStyle}
+                                                placeholder={safeInputPlaceholder}
+                                                value={currentInput}
+                                                oninput={handleInputChange}
+                                                onkeydown={handlePreviewKeyPress}
+                                            />
+                                            <div class="prev-phone-input-actions">
+                                                <button class="prev-send-btn" style={phoneSendBtnStyle} onclick={sendMessage}>
+                                                    <template if:true={hasSendIcon}>
+                                                        <img src={sendIconUrl} class="prev-send-icon-img"/>
+                                                    </template>
+                                                    <template if:false={hasSendIcon}>
+                                                        <svg viewBox="0 0 24 24" class="prev-send-icon-svg"
+                                                            fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                                        </svg>
+                                                    </template>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </template>
+                                <!-- end VIEW B -->
+
+                            </div>
+                            <!-- end prev-phone-outer -->
+                        </template>
+
+                    </template>
+                    <!-- end isSideTab -->
+
+                </div>
+
+            </div>
+        </template>
+
+    </div>
+</template>

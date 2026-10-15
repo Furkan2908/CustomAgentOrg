@@ -1,0 +1,31 @@
+:host {
+    display: inline;
+}
+
+.b {
+    font-weight: 700;
+}
+
+.i {
+    font-style: italic;
+}
+
+.c {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.9em;
+    background: var(--chat-code-bg, rgba(127, 127, 127, 0.16));
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+}
+
+/* Links inherit the bubble's text colour so admin-configured colours always stay readable. */
+.lnk {
+    color: var(--chat-link-color, inherit);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: anywhere;
+}
+
+.lnk:hover {
+    text-decoration-thickness: 2px;
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Message channel for syncing chat between HomePanel and SidePanel</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>The type of event — chatUpdated, chatStarted, chatClosed, firstMessageSent</description>
+        <fieldName>type</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Payload containing conversation state</description>
+        <fieldName>payload</fieldName>
+    </lightningMessageFields>
+    <masterLabel>Chat Message Channel</masterLabel>
+</LightningMessageChannel>

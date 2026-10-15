@@ -1,0 +1,114 @@
+<template>
+    <div class="body">
+        <template for:each={blocks} for:item="b">
+            <template lwc:if={b.isParagraph}>
+                <p key={b.key} class="p"><c-chat-inline segments={b.segments}></c-chat-inline></p>
+            </template>
+            <template lwc:elseif={b.isHeading}>
+                <div key={b.key} class={b.cls} role="heading" aria-level={b.ariaLevel}>
+                    <c-chat-inline segments={b.segments}></c-chat-inline>
+                </div>
+            </template>
+            <template lwc:elseif={b.isOrderedList}>
+                <ol key={b.key} class="list" start={b.start}>
+                    <template for:each={b.items} for:item="it">
+                        <li key={it.key}>
+                            <c-chat-inline segments={it.segments}></c-chat-inline>
+                            <template lwc:if={it.hasSubs}>
+                                <template lwc:if={it.subOrdered}>
+                                    <ol class="list sub">
+                                        <template for:each={it.subs} for:item="sub">
+                                            <li key={sub.key}><c-chat-inline segments={sub.segments}></c-chat-inline></li>
+                                        </template>
+                                    </ol>
+                                </template>
+                                <template lwc:else>
+                                    <ul class="list sub">
+                                        <template for:each={it.subs} for:item="sub">
+                                            <li key={sub.key}><c-chat-inline segments={sub.segments}></c-chat-inline></li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </template>
+                        </li>
+                    </template>
+                </ol>
+            </template>
+            <template lwc:elseif={b.isBulletList}>
+                <ul key={b.key} class="list">
+                    <template for:each={b.items} for:item="it">
+                        <li key={it.key}>
+                            <c-chat-inline segments={it.segments}></c-chat-inline>
+                            <template lwc:if={it.hasSubs}>
+                                <template lwc:if={it.subOrdered}>
+                                    <ol class="list sub">
+                                        <template for:each={it.subs} for:item="sub">
+                                            <li key={sub.key}><c-chat-inline segments={sub.segments}></c-chat-inline></li>
+                                        </template>
+                                    </ol>
+                                </template>
+                                <template lwc:else>
+                                    <ul class="list sub">
+                                        <template for:each={it.subs} for:item="sub">
+                                            <li key={sub.key}><c-chat-inline segments={sub.segments}></c-chat-inline></li>
+                                        </template>
+                                    </ul>
+                                </template>
+                            </template>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+            <template lwc:elseif={b.isCode}>
+                <pre key={b.key} class="code"><code>{b.text}</code></pre>
+            </template>
+            <template lwc:elseif={b.isQuote}>
+                <blockquote key={b.key} class="quote"><c-chat-inline segments={b.segments}></c-chat-inline></blockquote>
+            </template>
+            <template lwc:elseif={b.isRule}>
+                <hr key={b.key} class="rule" />
+            </template>
+            <template lwc:elseif={b.isTable}>
+                <div key={b.key} class="table-wrap" tabindex="0">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <template for:each={b.header} for:item="h">
+                                    <th key={h.key} class={h.cls} scope="col">
+                                        <c-chat-inline segments={h.segments}></c-chat-inline>
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={b.rows} for:item="r">
+                                <tr key={r.key}>
+                                    <template for:each={r.cells} for:item="c">
+                                        <td key={c.key} class={c.cls}>
+                                            <c-chat-inline segments={c.segments}></c-chat-inline>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <template lwc:if={b.hasMore}>
+                        <div class="table-more">…</div>
+                    </template>
+                </div>
+            </template>
+            <template lwc:elseif={b.isPlain}>
+                <p key={b.key} class="plain">{b.text}</p>
+            </template>
+        </template>
+
+        <template lwc:if={hasCitations}>
+            <div class="sources">
+                <span class="sources-label">Sources:</span>
+                <template for:each={safeCitations} for:item="cit">
+                    <a key={cit.key} class="src" href={cit.href} target={cit.target} rel="noopener noreferrer">{cit.label}</a>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

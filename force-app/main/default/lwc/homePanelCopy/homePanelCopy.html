@@ -1,0 +1,350 @@
+<template>
+    <template if:true={isHomePanelVisible}>
+        <div class="home-panel" style={panelStyle}>
+
+            <div class="bg-blur blur-1"></div>
+            <div class="bg-blur blur-2"></div>
+
+            <div class="panel-content">
+
+                <!-- ══════════════════════════════════════════
+                     VIEW A — PRE-CHAT FORM
+                     Condition: showPreChat=true
+                ══════════════════════════════════════════ -->
+                <template if:true={showPreChat}>
+
+                    <div class="chat-header glass-header" style={chatHeaderStyle}>
+                        <div class="header-branding">
+                            <img src={robotIcon} class="header-icon" style={homeAvatarStyle} alt="Agent" />
+                            <h2 class="header-text">{agnetName}</h2>
+                        </div>
+                        <!-- <button class="close-btn" onclick={handlePreChatBack} title="Back">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button> -->
+                    </div>
+
+                    <div class="prechat-body custom-scroll">
+                        <div class="prechat-intro">
+                            <p class="prechat-title" style={preChatTitleStyle}>{preChatTitle}</p>
+                            <p class="prechat-subtitle" style={preChatSubtitleStyle}>{preChatSubtitle}</p>
+                        </div>
+
+                        <template for:each={computedPrechatFields} for:item="field">
+
+                            <div key={field.apiName} class="prechat-field">
+
+                                <label class="prechat-label" style={preChatLabelStyle}>
+                                    {field.label}
+                                    <template if:true={field.required}>
+                                        <span class="required-star">*</span>
+                                    </template>
+                                </label>
+
+                                <input
+                                    type={field.type}
+                                    class="prechat-input"
+                                    style={preChatInputStyle}
+                                    data-field={field.apiName}
+                                    value={field.value}
+                                    placeholder={field.label}
+                                    oninput={handlePreChatInput}
+                                />
+
+                                <template if:true={field.error}>
+                                    <span class="prechat-error">
+                                        {field.error}
+                                    </span>
+                                </template>
+
+                            </div>
+
+                        </template>
+                    </div>
+
+                    <div class="home-input-section prechat-footer-section">
+                        <button
+                            class="prechat-start-btn"
+                            style={homeSendBtnStyle}
+                            onclick={handlePreChatSubmit}
+                        >
+                            {preChatStartBtnLabel}
+                            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+
+                </template>
+
+                <!-- ══════════════════════════════════════════
+                     VIEW B — WELCOME / HOME SCREEN
+                     Condition: showPreChat=false AND hasStartedChat=false
+                ══════════════════════════════════════════ -->
+                <template if:true={showHomeScreen}>
+
+                    <div class="home-hero-section">
+                        <div class="avatar-hero-wrapper">
+                            <div class="home-glow" style={homeGlowStyle}></div>
+                            <img src={robotIcon} style={homeAvatarStyle} class="home-avatar-img float-anim" alt="Agentforce Bot" />
+                        </div>
+                    </div>
+
+                    <div class="home-content-section">
+                        <div class="home-agent-name" style={homeAgentNameStyle}>{agnetName}</div>
+                        <div class="home-title" style={homeTitleStyle}>{welcomeMsg}</div>
+                        <div class="home-desc" style={homeDescStyle}>{welcomeDesc}</div>
+                    </div>
+
+                    <div class="home-input-section">
+                        <div class="home-input-bar" style={homeInputBarStyle}>
+                            <!-- <label class="attach-wrapper">
+                                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                </svg>
+                                <input type="file" accept="image/*,.pdf,.doc" onchange={handleFileUpload} />
+                            </label> -->
+                            <input type="text"
+                                class="home-input-field"
+                                style={homeInputFieldStyle}
+                                placeholder={inputPlaceholder}
+                                value={inputText}
+                                oninput={handleInput}
+                                onkeydown={handleKeyPress} />
+                            <div class="home-input-actions">
+                                <button class="send-btn" style={homeSendBtnStyle} onclick={startChatFromHome}>
+                                    <template if:true={hasSendIcon}>
+                                        <img src={sendIconUrl} class="send-icon-img" alt="send" />
+                                    </template>
+                                    <template if:false={hasSendIcon}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg>
+                                    </template>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </template>
+
+                <!-- ══════════════════════════════════════════
+                     VIEW C — CHAT SCREEN
+                     Condition: hasStartedChat=true
+                ══════════════════════════════════════════ -->
+                <template if:true={hasStartedChat}>
+
+                    <div class="chat-header glass-header" style={chatHeaderStyle}>
+                        <div class="header-branding">
+                            <img src={robotIcon} class="header-icon" style={homeAvatarStyle} />
+                            <h2 class="header-text">{agnetName}</h2>
+                        </div>
+                        <button class="close-btn" onclick={endChat} title="End Chat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <template if:true={chatAvailable}>
+                        <div class="resume-overlay">
+                            <div class="glass-card">
+                                <p>{resumeMsg}</p>
+                                <button class="btn-primary" onclick={enterChat}>{resumeLabel}</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="messages-wrapper custom-scroll">
+                        <template for:each={messages} for:item="msg">
+                            <template if:true={msg.isUser}>
+                                <div key={msg.id} class="msg-row user-row slide-left">
+                                    <div class="bubble user-bubble" style={userBubbleStyle}>
+                                        <template if:true={msg.isAttachment}>
+                                            <div class="file-card">
+                                                <span class="icon">📎</span>
+                                                <span class="fname">{msg.fileName}</span>
+                                                <template if:true={msg.uploading}>
+                                                    <div class="progress-track">
+                                                        <div class="progress-fill" style={msg.progressStyle}></div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template if:false={msg.isAttachment}>
+                                            {msg.text}
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            <template if:true={msg.isBot}>
+                                <div key={msg.id} class="msg-row bot-row slide-right">
+                                    <!-- ── Avatar: robot icon for bot, person icon for live agent ── -->
+                                    <template if:true={msg.isHumanAgent}>
+                                        <span class="chat-avatar-mini agent-avatar-icon" title="Live Agent">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                            </svg>
+                                        </span>
+                                    </template>
+                                    <template if:false={msg.isHumanAgent}>
+                                        <img src={robotIcon} class="chat-avatar-mini" style={homeAvatarStyle} />
+                                    </template>
+                                    <!-- ── Bubble: agent messages get a distinct tint ── -->
+                                    <div class="bubble bot-bubble" style={botBubbleStyle}>
+                                        <c-chat-message-body text={msg.rawText} citations={msg.citations}></c-chat-message-body>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- ══ AGENT JOINING LOADER ══════════════════════════════
+                             Shown during bot→agent handoff while we wait for the
+                             live agent's first participant-add SSE event.
+                        ══════════════════════════════════════════════════════════ -->
+                        <template if:true={isAgentJoining}>
+                            <div class="agent-joining-banner slide-right">
+                                <div class="agent-joining-spinner">
+                                    <span class="spinner-ring"></span>
+                                </div>
+                                <div class="agent-joining-text">
+                                    <span class="agent-joining-title">Connecting you to a live agent</span>
+                                    <span class="agent-joining-sub">Please hold on, this may take a moment…</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ══ BOT TYPING INDICATOR ══════════════════════════════
+                             "AI Assistant is typing" — neutral/grey dots.
+                        ══════════════════════════════════════════════════════════ -->
+                        <template if:true={isBotTyping}>
+                            <div class="msg-row bot-row typing-row slide-right">
+                                <img src={robotIcon} class="chat-avatar-mini" style={homeAvatarStyle} alt="Bot" />
+                                <div class="bubble bot-bubble typing-bubble">
+                                    <span class="typing-label typing-label--bot">{typingIndicatorText}</span>
+                                    <span class="typing-dots">
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                        <span class="dot"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ══ LIVE AGENT TYPING INDICATOR ═══════════════════════
+                             "Live Agent is typing" — blue dots, person icon.
+                        ══════════════════════════════════════════════════════════ -->
+                        <template if:true={isAgentTyping}>
+                            <div class="msg-row bot-row typing-row slide-right">
+                                <span class="chat-avatar-mini agent-avatar-icon" title="Live Agent">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                    </svg>
+                                </span>
+                                <div class="bubble bot-bubble typing-bubble typing-bubble--agent">
+                                    <span class="typing-label typing-label--agent">Live Agent is typing</span>
+                                    <span class="typing-dots">
+                                        <span class="dot dot--agent"></span>
+                                        <span class="dot dot--agent"></span>
+                                        <span class="dot dot--agent"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+
+                    <div class="home-input-section">
+                        
+                    <!-- ══ FILE PREVIEW STRIP (above input bar) ══════════════════════════════ -->
+
+                        <template if:true={hasFilePreviews}>
+                            <div class="file-preview-strip custom-scroll">
+                                <template for:each={filePreviews} for:item="fp">
+                                    <div key={fp.id} class="file-preview-item">
+
+                                        <!-- Image thumbnail -->
+                                        <template if:true={fp.isImage}>
+                                            <div class="fp-thumb-wrap">
+                                                <img src={fp.dataUrl} alt={fp.name} class="fp-thumb" />
+                                                <div class="fp-img-overlay"></div>
+                                            </div>
+                                        </template>
+
+                                        <!-- Non-image file icon -->
+                                        <template if:false={fp.isImage}>
+                                            <div class="fp-icon-wrap">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                                    stroke-linecap="round" stroke-linejoin="round" class="fp-file-icon">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                </svg>
+                                                <span class="fp-ext">{fp.ext}</span>
+                                            </div>
+                                        </template>
+
+                                        <!-- File name -->
+                                        <span class="fp-name">{fp.shortName}</span>
+
+                                        <!-- Remove button -->
+                                        <button class="fp-remove-btn" data-id={fp.id} onclick={removeFilePreview} title="Remove">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- ══ INPUT BAR ══════════════════════════════════════════════════════════ -->
+                        <div class="home-input-bar" style={homeInputBarStyle}>
+                            
+                            <!-- <label class="attach-wrapper">
+                                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                </svg>
+                                <input type="file" accept="image/*,.pdf,.doc,.docx" onchange={handleFileSelect} />
+                            </label> -->
+
+                            <input type="text"
+                                class="home-input-field"
+                                style={homeInputFieldStyle}
+                                placeholder={inputPlaceholder}
+                                value={inputText}
+                                oninput={handleInput}
+                                onkeydown={handleKeyPress} />
+
+                            <div class="home-input-actions">
+                                <button class="send-btn" style={homeSendBtnStyle} onclick={sendUserMsg}>
+                                    <template if:true={sendIconUrl}>
+                                        <img src={sendIconUrl} class="send-icon-img" />
+                                    </template>
+                                    <template if:false={sendIconUrl}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg>
+                                    </template>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </template>
+
+            </div>
+        </div>
+    </template>
+</template>

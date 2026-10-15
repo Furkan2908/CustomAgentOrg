@@ -1,0 +1,13 @@
+<template>
+    <template for:each={segments} for:item="seg">
+        <template lwc:if={seg.isBreak}>
+            <br key={seg.key} />
+        </template>
+        <template lwc:elseif={seg.isLink}>
+            <a key={seg.key} class={seg.cls} href={seg.href} target={seg.target} rel={seg.rel}>{seg.text}</a>
+        </template>
+        <template lwc:else>
+            <span key={seg.key} class={seg.cls}>{seg.text}</span>
+        </template>
+    </template>
+</template>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- Apex Classes -->
+    <types>
+        <members>AgentChatAPIController</members>
+        <members>AgentChatAPIControllerTest</members>
+        <members>AgentConfigService</members>
+        <members>AgentConfigServiceTest</members>
+        <members>AgentConfigurationController</members>
+        <members>AgentConfigurationControllerTest</members>
+        <members>AgentConfigDTO</members>
+        <members>AgentChatController</members>
+        <members>AgentConfigPublishService</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- Custom Objects -->
+    <types>
+        <members>Agent_Configuration__c</members>
+        <members>Agent_Config_Version__c</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- Lightning Web Components -->
+    <types>
+        <members>agentConfigurationConsoleCopy</members>
+        <members>homePanelCopy</members>
+        <members>sharedConversationServiceCopy</members>
+        <members>sidePanelCopy</members>
+        <members>chatInline</members>
+        <members>messageParser</members>
+        <members>chatMessageBody</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <!-- Message Channel -->
+    <types>
+        <members>chatMessageChannel</members>
+        <name>LightningMessageChannel</name>
+    </types>
+
+    <!-- FlexiPage -->
+    <types>
+        <members>Agent_Config_Custom_Record_Page</members>
+        <members>Agent_Config_Version_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <!-- Static Resources -->
+    <types>
+        <members>aviAvatarBG</members>
+        <members>chatbot</members>
+        <members>chatbot1</members>
+        <name>StaticResource</name>
+    </types>
+
+    <!-- Permission Sets -->
+
+
+    <version>66.0</version>
+
+</Package>

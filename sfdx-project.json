@@ -1,0 +1,67 @@
+{
+  "packageDirectories": [
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": true,
+      "package": "CustomAgentPackage",
+      "versionDescription": ""
+    },
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": false,
+      "package": "CustomAgentPackage4",
+      "versionDescription": ""
+    },
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": false,
+      "package": "CustomAgentPackage5",
+      "versionDescription": ""
+    },
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": false,
+      "package": "CustomAgentPackage6",
+      "versionDescription": ""
+    },
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": false,
+      "package": "CustomAgentPackage7",
+      "versionDescription": ""
+    },
+    {
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "path": "force-app",
+      "default": false,
+      "package": "CustomAgentPackage8",
+      "versionDescription": ""
+    }
+  ],
+  "name": "CustomAgentOrg",
+  "namespace": "capstone_08",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "66.0",
+  "packageAliases": {
+    "CustomAgentPackage": "0HogK0000002lcLSAQ",
+    "CustomAgentPackage2": "0HogK0000002ldxSAA",
+    "CustomAgentPackage3": "0HogK0000002lfZSAQ",
+    "CustomAgentPackage4": "0HogK0000002lhBSAQ",
+    "CustomAgentPackage5": "0HogK0000002linSAA",
+    "CustomAgentPackage6": "0HogK0000002lkPSAQ",
+    "CustomAgentPackage7": "0HogK0000002lm1SAA",
+    "CustomAgentPackage8": "0HogK0000002mRxSAI",
+    "CustomAgentPackage8@0.1.0-1": "04tgK000000DPwfQAG"
+  }
+}

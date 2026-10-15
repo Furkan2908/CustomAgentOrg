@@ -1,0 +1,305 @@
+<template>
+    <template if:true={isSidePanelVisible}>
+
+        <!-- ══ LAUNCHER BUTTON — hidden when panel is open ══ -->
+        <template if:true={showLauncher}>
+
+            <!-- Welcome toast — LEFT of launcher, same vertical center -->
+            <template if:true={showToast}>
+                <div class="welcome-popup slide-in">
+                    <!-- <span class="wave">👋</span> -->
+                    <div class="popup-text">{popupMsg}</div>
+                </div>
+            </template>
+
+            <div class="launcher-btn" onclick={togglePanel} style={launcherBtnStyle}>
+                <div class="pulse-ring"></div>
+                <img src={robotIcon} class="launcher-avatar" alt="Chat" onerror={handleAvatarError} />
+            </div>
+
+        </template>
+
+        <!-- ══ SIDE PANEL ══ -->
+        <div class={panelClasses} style={panelOuterStyle}>
+
+            <!-- Decorative bg glows -->
+            <div class="bg-glow top-glow"></div>
+            <div class="bg-glow bottom-glow"></div>
+
+            <!-- ── HEADER ── -->
+            <div class="panel-header glass-header" style={headerStyle}>
+                <div class="header-left">
+                    <div class="avatar-container">
+                        <img src={robotIcon} alt="AI" class="header-avatar" onerror={handleAvatarError} />
+                        <span class="status-dot"></span>
+                    </div>
+                    <div class="title-group">
+                        <h2 class="header-title">{headerTitle}</h2>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="icon-btn minimize-btn" onclick={minimizePanel} title="Minimize">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                    <template if:true={showEndChatButton}>
+                        <button class="icon-btn close-btn" onclick={askEndChat} title="End Chat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- ── CONFIRM MODAL ── -->
+            <template if:true={showConfirmModal}>
+                <div class="modal-backdrop"></div>
+                <div class="confirm-modal pop-in">
+                    <div class="modal-icon">⚠️</div>
+                    <h3>End Session?</h3>
+                    <p>Are you sure you want to end this chat?</p>
+                    <div class="modal-actions">
+                        <button class="btn-ghost" onclick={hideModal}>Cancel</button>
+                        <button class="btn-danger" onclick={confirmEndChat}>End Chat</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ══════════════════════════════════════════
+                 VIEW A — PRE-CHAT FORM
+                 Condition: showPreChat=true
+            ══════════════════════════════════════════ -->
+            <template if:true={showPreChat}>
+
+                <div class="prechat-body custom-scroll">
+                    <div class="prechat-intro">
+                        <p class="prechat-title" style={preChatTitleStyle}>{preChatTitle}</p>
+                        <p class="prechat-subtitle" style={preChatSubtitleStyle}>{preChatSubtitle}</p>
+                    </div>
+
+                    <template for:each={dynamicPreChatFieldsUI} for:item="field">
+
+                        <div key={field.apiName} class="prechat-field">
+
+                            <label class="prechat-label" style={preChatLabelStyle}>
+                                {field.label}
+                                <template if:true={field.required}>
+                                    <span class="required-star">*</span>
+                                </template>
+                            </label>
+
+                            <input
+                                type={field.type}
+                                class="prechat-input"
+                                style={preChatInputStyle}
+                                data-field={field.apiName}
+                                value={field.value} 
+                                placeholder={field.label}
+                                oninput={handlePreChatInput}
+                            />
+
+                            <template if:true={field.error}>
+                                <span class="prechat-error">
+                                    {field.error}
+                                </span>
+                            </template>
+
+                        </div>
+
+                    </template>
+                </div>
+
+                <!-- Submit button sits in the same shell as the normal input bar -->
+                <div class="phone-input-section prechat-footer-section" style={inputSectionStyle}>
+                     <div class="prechat-footer-actions">
+
+                        <!-- SKIP BUTTON -->
+                        <!-- <button
+                            class="prechat-skip-btn"
+                            onclick={handleSkipPreChat}
+                        >
+                            Skip
+                        </button> -->
+
+                        <!-- START BUTTON -->
+                        <button
+                            class="prechat-start-btn"
+                            style={sendBtnFullStyle}
+                            onclick={handlePreChatSubmit}
+                        >
+                            {preChatStartBtnLabel}
+                            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+
+                    </div>
+                </div>
+
+            </template>
+
+            <!-- ══════════════════════════════════════════
+                 VIEW B — PRE-CHAT HERO + CHAT MESSAGES
+                 Condition: showPreChat=false
+            ══════════════════════════════════════════ -->
+            <template if:false={showPreChat}>
+
+                <!-- ── CHAT BODY ── -->
+                <div class="chat-body custom-scroll" style={heroPanelStyle}>
+
+                    <!-- Pre-chat hero — shown when no messages yet -->
+                    <template if:false={hasMessages}>
+                        <div class="pre-chat-wrapper fade-in-up">
+                            <div class="phone-avatar-wrap">
+                                <div class="phone-avatar-ring" style={avatarRingStyle}>
+                                    <div class="avatar-glow" style={avatarGlowStyle}></div>
+                                    <img src={robotIcon} class="phone-avatar-img" alt="AI" onerror={handleAvatarError} />
+                                </div>
+                            </div>
+                            <div class="phone-agent-name" style={welcomeTitleStyle}>{welcomeMsg}</div>
+                            <p class="phone-welcome-text" style={welcomeSubStyle}>{welcomeDesc}</p>
+                        </div>
+                    </template>
+
+                    <!-- Chat messages -->
+                    <template if:true={hasMessages}>
+                        <div class="messages-wrapper">
+                            <template for:each={messages} for:item="msg">
+
+                                <template if:true={msg.isUser}>
+                                    <div key={msg.id} class="msg-row user-row slide-left">
+                                        <div class="bubble user-bubble" style={userBubbleStyle}>
+                                            <template if:true={msg.isAttachment}>
+                                                <div class="file-card">
+                                                    <span class="icon">📎</span>
+                                                    <span class="fname">{msg.fileName}</span>
+                                                    <template if:true={msg.uploading}>
+                                                        <div class="progress-track">
+                                                            <div class="progress-fill" style={msg.progressStyle}></div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <template if:false={msg.isAttachment}>
+                                                {msg.text}
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template if:true={msg.isBot}>
+                                    <div key={msg.id} class="msg-row bot-row slide-right">
+                                        <template if:true={msg.isHumanAgent}>
+                                            <span class="chat-avatar-mini agent-avatar-icon" title="Live Agent">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                                </svg>
+                                            </span>
+                                        </template>
+                                        <template if:false={msg.isHumanAgent}>
+                                            <img src={robotIcon} class="chat-avatar-mini" alt="AI" onerror={handleAvatarError} />
+                                        </template>
+                                        <div class="bubble bot-bubble" style={botBubbleStyle}>
+                                            <c-chat-message-body text={msg.rawText} citations={msg.citations}></c-chat-message-body>
+                                        </div>
+                                    </div>
+                                </template>
+
+                            </template>
+
+                            <!-- ══ AGENT JOINING LOADER ══════════════════════════════ -->
+                            <template if:true={isAgentJoining}>
+                                <div class="agent-joining-banner slide-right">
+                                    <div class="agent-joining-spinner">
+                                        <span class="spinner-ring"></span>
+                                    </div>
+                                    <div class="agent-joining-text">
+                                        <span class="agent-joining-title">Connecting you to a live agent</span>
+                                        <span class="agent-joining-sub">Please hold on, this may take a moment…</span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- ══ BOT TYPING INDICATOR ══════════════════════════════ -->
+                            <template if:true={isBotTyping}>
+                                <div class="msg-row bot-row typing-row slide-right">
+                                    <img src={robotIcon} class="chat-avatar-mini" alt="Bot" onerror={handleAvatarError} />
+                                    <div class="bubble bot-bubble typing-bubble" style={botBubbleStyle}>
+                                        <span class="typing-label typing-label--bot">{typingIndicatorText}</span>
+                                        <span class="typing-dots">
+                                            <span class="dot"></span>
+                                            <span class="dot"></span>
+                                            <span class="dot"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- ══ LIVE AGENT TYPING INDICATOR ═══════════════════════ -->
+                            <template if:true={isAgentTyping}>
+                                <div class="msg-row bot-row typing-row slide-right">
+                                    <span class="chat-avatar-mini agent-avatar-icon" title="Live Agent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                        </svg>
+                                    </span>
+                                    <div class="bubble bot-bubble typing-bubble typing-bubble--agent">
+                                        <span class="typing-label typing-label--agent">Live Agent is typing</span>
+                                        <span class="typing-dots">
+                                            <span class="dot dot--agent"></span>
+                                            <span class="dot dot--agent"></span>
+                                            <span class="dot dot--agent"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- ── INPUT AREA ── -->
+                <div class="phone-input-section" style={inputSectionStyle}>
+                    <div class="phone-input-bar" style={inputBarStyle}>
+                        <input
+                            type="text"
+                            class="phone-input-field"
+                            style={inputFieldStyle}
+                            placeholder={placeholder}
+                            oninput={handleInput}
+                            onkeydown={handleKeyPress}
+                            value={inputText}
+                        />
+                        <div class="phone-input-actions">
+                            <button class="send-btn" onclick={sendMessage}>
+
+                                <!-- ✅ IF USER UPLOADED ICON -->
+                                <template if:true={sendIcon}>
+                                    <img src={sendIcon} class="send-icon-img" />
+                                </template>
+
+                                <!-- ✅ FALLBACK DEFAULT -->
+                                <template if:false={sendIcon}>
+                                    <svg viewBox="0 0 24 24" class="send-icon-svg" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </template>
+
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </div>
+    </template>
+</template>
